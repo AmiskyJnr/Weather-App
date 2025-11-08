@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>My Responsive Weather App</h1>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="cityInput"
+          placeholder="Enter city name...e.g. Accra"
+        />
+        <button id="searchBtn">Search</button>
+      </div>
+
+      <div class="loading" id="loading" style="display: none">
+        Loading weather data...
+      </div>
+      <div class="error-message" id="error"></div>
+
+      <div class="weather-display" id="weatherDisplay" style="display: none">
+        <div class="city-name" id="cityName"></div>
+        <div class="weather-icon" id="weatherIcon"></div>
+        <div class="temperature" id="temperature"></div>
+        <div class="description" id="description"></div>
+
+        <div class="weather-details">
+          <div class="detail-item">
+            <div class="detail-label">Feels Like</div>
+            <div class="detail-value" id="feelsLike"></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Humidity</div>
+            <div class="detail-value" id="humidity"></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Wind Speed</div>
+            <div class="detail-value" id="windSpeed"></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Pressure</div>
+            <div class="detail-value" id="pressure"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_KEY = "89550e0eb88244c0ac281746253010";
+      const API_URL = "https://api.weatherapi.com/v1/current.json";
+
+      const cityInput = document.getElementById("cityInput");
+      const searchBtn = document.getElementById("searchBtn");
+      const weatherDisplay = document.getElementById("weatherDisplay");
+      const errorMessage = document.getElementById("error");
+      const loading = document.getElementById("loading");
+
+      const getWeatherIcon = (text) => {
+        text = text.toLowerCase();
+        if (text.includes("rain")) return "🌧️";
+        if (text.includes("sun") || text.includes("clear")) return "☀️";
+        if (text.includes("cloud")) return "☁️";
+        if (text.includes("snow")) return "❄️";
+        if (text.includes("storm") || text.includes("thunder")) return "⛈️";
+        if (text.includes("fog") || text.includes("mist")) return "🌫️";
+        return "🌤️";
+      };
+
+      const fetchWeather = async (city) => {
+        try {
+          loading.style.display = "block";
+          weatherDisplay.style.display = "none";
+          errorMessage.style.display = "none";
+
+          const response = await fetch(
+            `${API_URL}?key=${API_KEY}&q=${encodeURIComponent(city)}&aqi=no`
+          );
+
+          if (!response.ok) throw new Error("City not found");
+
+          const data = await response.json();
+          displayWeather(data);
+        } catch (err) {
+          errorMessage.textContent =
+            err.message === "City not found"
+              ? "City not found. Please try again."
+              : "Error fetching weather data. Please try again.";
+          errorMessage.style.display = "block";
+        } finally {
+          loading.style.display = "none";
+        }
+      };
+
+      const displayWeather = (data) => {
+        document.getElementById(
+          "cityName"
+        ).textContent = `${data.location.name}, ${data.location.country}`;
+        document.getElementById("weatherIcon").textContent = getWeatherIcon(
+          data.current.condition.text
+        );
+        document.getElementById(
+          "temperature"
+        ).textContent = `${data.current.temp_c}°C`;
+        document.getElementById("description").textContent =
+          data.current.condition.text;
+        document.getElementById(
+          "feelsLike"
+        ).textContent = `${data.current.feelslike_c}°C`;
+        document.getElementById(
+          "humidity"
+        ).textContent = `${data.current.humidity}%`;
+        document.getElementById(
+          "windSpeed"
+        ).textContent = `${data.current.wind_kph} km/h`;
+        document.getElementById(
+          "pressure"
+        ).textContent = `${data.current.pressure_mb} hPa`;
+
+        weatherDisplay.style.display = "block";
+      };
+
+      searchBtn.addEventListener("click", () => {
+        const city = cityInput.value.trim();
+        if (city) fetchWeather(city);
+      });
+
+      cityInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          const city = cityInput.value.trim();
+          if (city) fetchWeather(city);
+        }
+      });
+
+      fetchWeather("Sunyani");
+    </script>
+  </body>
+</html>
